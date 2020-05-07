@@ -108,8 +108,9 @@ ip_mat * ip_mat_mean(ip_mat * a, ip_mat * b);
 
 /**** PARTE 2: SEMPLICI OPERAZIONI SU IMMAGINI ****/
 /* Converte un'immagine RGB ad una immagine a scala di grigio.
- * Quest'operazione viene fatta calcolando la media per ogni pixel sui 3 canali
- * e creando una nuova immagine avente per valore di un pixel su ogni canale la media appena calcolata.
+ * Quest'operazione viene fatta calcolando la media per ogni pixel 
+ * sui 3 canali e creando una nuova immagine avente per 
+ * valore di un pixel su ogni canale la media appena calcolata.
  * Avremo quindi che tutti i canali saranno uguali.
  * */
 ip_mat * ip_mat_to_gray_scale(ip_mat * in);
