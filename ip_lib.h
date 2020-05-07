@@ -28,6 +28,7 @@ typedef struct {
     float *** data; /* <- matrice 3D di valori float */
 }ip_mat;
 
+
 /**** PARTE 1: TIPO DI DATI ip_mat E MEMORIA ****/
 
 /* Inizializza una ip_mat con dimensioni h w e k. Ogni elemento è inizializzato a v.
