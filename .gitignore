@@ -1,3 +1,4 @@
 *.bmp
 mandelbrot
-TODO
+tests
+main_iplib

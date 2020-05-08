@@ -1,0 +1,28 @@
+Parte 1.1
+CREATE - SEMBRA OK
+FREE - SEMBRA OK
+INIT RANDOM - SEMBRA OK
+COPY - SEMBRA OK
+CONCAT - NO, DA SEGFAULT!
+SUBSET - ???
+
+Parte 1.2
+SUM - ???
+SUB - ???
+MUL SCALAR - ???
+ADD SCALAR - ???
+MEAN - ???
+COMPUTE_STATS - ???
+
+Parte 2
+GRAY - NO, Rende tutto bianco
+BLEND - Funziona solo se alpha = 0 o 1.
+BRIGHTEN - Sembra OK
+CORRUPT - NON FUNZIONA COME DOVREBBE
+
+
+Parte 3
+CONVOLVE
+PADDING
+RESCALE
+CLAMP
