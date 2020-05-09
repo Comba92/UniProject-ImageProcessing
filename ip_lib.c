@@ -6,6 +6,9 @@
 #include "ip_lib.h"
 #include "bmp.h"
 
+#define max(a,b) (a > b ? a : b);
+#define min(a,b) (a < b ? a : b);
+
 void ip_mat_show(ip_mat * t){
     unsigned int i,l,j;
     printf("Matrix of size %d x %d x %d (hxwxk)\n",t->h,t->w,t->k);
@@ -84,15 +87,7 @@ float get_val(ip_mat * a, unsigned int i,unsigned int j,unsigned int k){
     }
 }
 
-/* DA USARE PER OGNI OPERAZIONE!!! Usato in set_val() */
-float valid_color(float color) {
-    if(color > 255) return 255;
-    else if(color < 0) return 0;
-    else return color;
-}
-
 void set_val(ip_mat * a, unsigned int i,unsigned int j,unsigned int k, float v){
-    v = valid_color(v);
     if(i<a->h && j<a->w &&k<a->k){
         a->data[i][j][k]=v;
     }else{
@@ -114,10 +109,7 @@ ip_mat * ip_mat_create(unsigned int h, unsigned int w, unsigned int k, float v) 
     out->w = w;
     out->k = k;
 
-    out->stat = (stats *) malloc(sizeof(stats));
-    out->stat->min = v;
-    out->stat->max = v;
-    out->stat->mean = v;
+    out->stat = (stats *) malloc(sizeof(stats) * k);
 
     unsigned int i,j,l;
     out->data = (float ***) malloc(sizeof(float **) * h);
@@ -149,9 +141,6 @@ void ip_mat_free(ip_mat *a) {
 }
 
 void compute_stats(ip_mat * t) {
-    /* Max e min definite come macro, sono più efficienti */
-    #define max(a,b) (a > b ? a : b);
-    #define min(a,b) (a < b ? a : b);
     float minVal, maxVal, sum=0;
     unsigned int i,j,k;
 
@@ -159,16 +148,17 @@ void compute_stats(ip_mat * t) {
     minVal = get_val(t,0,0,0);
     maxVal = get_val(t,0,0,0);
 
-    for(i=0; i < t->h; i++)
-        for(j=0; j < t->w; j++)
-            for(k=0; k < t->k; k++) {
+    for(k=0; k < t->k; k++) {
+        for(i=0; i< t->h; i++)
+            for(j=0; j < t->w; j++) {
                 minVal = min(minVal, get_val(t, i,j,k));
                 maxVal = max(maxVal, get_val(t, i,j,k));
                 sum += get_val(t, i,j,k);
             }
-    t->stat->min = minVal;
-    t->stat->max = maxVal;
-    t->stat->mean = sum / (float)(t->w * t->h * t->k);
+        t->stat[k].min = minVal;
+        t->stat[k].max = maxVal;
+        t->stat[k].mean = sum / (t->h * t->w);
+    }
 }
 
 void ip_mat_init_random(ip_mat * t, float mean, float var) {
@@ -181,27 +171,13 @@ void ip_mat_init_random(ip_mat * t, float mean, float var) {
 }
 
 ip_mat * ip_mat_copy(ip_mat * in) {
-    ip_mat * out = (ip_mat *) malloc(sizeof(ip_mat));
-    out->h = in->h;
-    out->w = in->w;
-    out->k = in->k;
-
-    out->stat = (stats *) malloc(sizeof(stats));
-    out->stat->min = in->stat->min;
-    out->stat->max = in->stat->max;
-    out->stat->mean = in->stat->mean;
-
+    ip_mat * out = ip_mat_create(in->h, in->w, in->k, 0);
     unsigned int i,j,k;
-    out->data = (float ***) malloc(sizeof(float **) * out->h);
-    for(i=0; i < out->h; i++) {
-        out->data[i] = (float **) malloc(sizeof(float *) * out->w);
-        for(j=0; j < out->w; j++){
-            out->data[i][j] = (float *) malloc(sizeof(float) * out->k);
-            for(k=0; k < out->k; k++)
-                set_val(out, i,j,k, 
-                    get_val(in, i,j,k));
-        }
-    }
+    for(i=0; i<in->h; i++)
+        for(j=0; j<in->w; j++)
+            for(k=0; k < in->k; k++)
+            	set_val(out, i,j,k, 
+            		get_val(in, i,j,k));
 
     return out;
 }
@@ -271,7 +247,7 @@ ip_mat * ip_mat_sum(ip_mat *a, ip_mat *b) {
         for(j=0; j<out->w; j++)
             for(k=0; k < out->k; k++)
                 set_val(out, i,j,k, 
-                    get_val(a,i,j,k) + get_val(b,i,j,k));
+                    (get_val(a,i,j,k) + get_val(b,i,j,k)));
     
     return out;
 }
@@ -284,7 +260,7 @@ ip_mat * ip_mat_sub(ip_mat *a, ip_mat *b) {
         for(j=0; j<out->w; j++)
             for(k=0; k < out->k; k++)
                 set_val(out, i,j,k, 
-                    get_val(a,i,j,k) - get_val(b,i,j,k));
+                    (get_val(a,i,j,k) - get_val(b,i,j,k)));
 
     return out;
 }
@@ -297,7 +273,7 @@ ip_mat * ip_mat_mul_scalar(ip_mat *a, float c) {
         for(j=0; j<out->w; j++)
             for(k=0; k < out->k; k++)
                 set_val(out, i,j,k, 
-                    get_val(a,i,j,k) * c);
+                    (get_val(a,i,j,k) * c));
 
     return out;
 }
@@ -310,7 +286,7 @@ ip_mat *  ip_mat_add_scalar(ip_mat *a, float c) {
         for(j=0; j<out->w; j++)
             for(k=0; k < out->k; k++)
                 set_val(out, i,j,k, 
-                    get_val(a,i,j,k) + c);
+                    (get_val(a,i,j,k) + c));
 
     return out;
 }
@@ -348,16 +324,12 @@ ip_mat * ip_mat_to_gray_scale(ip_mat * in) {
 ip_mat * ip_mat_blend(ip_mat * a, ip_mat * b, float alpha) {
     ip_mat * out = ip_mat_copy(a);
 
-    if(alpha <  0) alpha = 0;
-    else if(alpha > 1) alpha = 1;
-
     float blend;
     unsigned int i, j, k;
     for(i=0; i<out->h; i++)
         for(j=0; j<out->w; j++)
             for(k=0; k < out->k; k++) {
-                blend = alpha*get_val(a,i,j,k) + 
-                    (1-alpha)*get_val(b,i,j,k);
+                blend = alpha * get_val(a,i,j,k) + (1-alpha) * get_val(b,i,j,k);
                 set_val(out,i,j,k, blend);
             }
 
@@ -444,9 +416,28 @@ ip_mat * create_gaussian_filter(int w, int h, int k, float sigma) {
 }
 
 void rescale(ip_mat * t, float new_max) {
-    printf("WIP!\n");
+	unsigned int i,j,k;
+	float result;
+	compute_stats(t);
+
+    for(k=0; k<t->k; k++)
+        for(i=0; i<t->h; i++)
+            for(j=0; j<t->w; j++) {
+                result = ((get_val(t,i,j,k) - t->stat[k].min) / 
+                	(t->stat[k].max - t->stat[k].min)) * new_max;
+                set_val(t, i,j,k, result);
+            }
 }
 
 void clamp(ip_mat * t, float low, float high) {
-    printf("WIP!\n");
+	unsigned int i, j, k;
+	float pixel;
+    for(i=0; i<t->h; i++)
+        for(j=0; j<t->w; j++)
+        	for(k=0; k<t->k; k++) {
+        		pixel = get_val(t, i,j,k);
+        		pixel = max(low, pixel);
+        		pixel = min(high, pixel);
+        		set_val(t, i,j,k, pixel);
+        	}
 }

@@ -39,6 +39,7 @@ int main(int argc, char * argv[]) {
         case 2:
             printf("Testing brighten...\n");
             result = ip_mat_brighten(matimg, var);
+            clamp(matimg, 0, 255);
             break;
         case 3:
             printf("Testing gray...\n");
