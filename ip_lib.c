@@ -220,7 +220,6 @@ ip_mat * ip_mat_subset(ip_mat * t, unsigned int row_start, unsigned int row_end,
     return out;
 }
 
-/* NON FUNZIONA!!! Da Segfault! SISTEMARE. */
 ip_mat * ip_mat_concat(ip_mat * a, ip_mat *b, int dimensione) {
     ip_mat * out;
     unsigned int i, j, k;
