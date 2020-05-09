@@ -4,9 +4,9 @@
 #include "bmp.h"
 
 int main(int argc, char * argv[]) {
-    char * in1 = "mongolfiere.bmp";
-    char * in2 = "flower2.bmp";
-    char * out = "test_img.bmp";
+    char * in1 = "flower.bmp";
+    char * in2 = "caf.bmp";
+    char * out = "out.bmp";
 
     int fun, var;
 
@@ -39,7 +39,7 @@ int main(int argc, char * argv[]) {
         case 2:
             printf("Testing brighten...\n");
             result = ip_mat_brighten(matimg, var);
-            clamp(matimg, 0, 255);
+            clamp(result, 0, 255);
             break;
         case 3:
             printf("Testing gray...\n");
@@ -52,6 +52,38 @@ int main(int argc, char * argv[]) {
         case 5:
             printf("Testing concat...\n");
             result = ip_mat_concat(matimg, matimg2, var);
+            break;
+        case 6: 
+            printf("Testing subset...\n");
+            result = ip_mat_subset(matimg, 10, 50, 2, 50);
+            break;
+        case 7:
+            printf("Testing padding...\n");
+            result = ip_mat_padding(matimg, 10, 10);
+            break;
+        case 8:
+            printf("Testing sharpen...\n");
+            result = ip_mat_convolve(matimg, create_sharpen_filter());
+            clamp(result, 0, 255);
+            break;
+        case 9:
+            printf("Testing edge...\n");
+            result = ip_mat_convolve(matimg, create_edge_filter());
+            clamp(result, 0, 255);
+            break;
+        case 10:
+            printf("Testing emboss...\n");
+            result = ip_mat_convolve(matimg, create_emboss_filter());
+            clamp(result, 0, 255);
+            break;
+        case 11:
+            printf("Testing average...\n");
+            result = ip_mat_convolve(matimg, create_average_filter(3, 3, 2));
+            break;
+        case 12:
+            printf("Testing gaussian...\n");
+            printf("STILL WIP\n");
+            return 0;
             break;
     }
 

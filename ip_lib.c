@@ -126,9 +126,8 @@ ip_mat * ip_mat_create(unsigned int h, unsigned int w, unsigned int k, float v) 
 }
 
 void ip_mat_free(ip_mat *a) {
-    free(a->stat);
+    /*free(a->stat);
     
-    /* AD OGNI MALLOC UN CORRISPETTIVO FREE!! */
     unsigned int i,j;
     for(i=0; i<a->h; i++) {
         for(j=0; j<a->w; j++)
@@ -137,7 +136,7 @@ void ip_mat_free(ip_mat *a) {
     }
     free(a->data);
 
-    free(a);
+    free(a); */
 }
 
 void compute_stats(ip_mat * t) {
@@ -186,12 +185,14 @@ ip_mat * ip_mat_subset(ip_mat * t, unsigned int row_start, unsigned int row_end,
     ip_mat * out = ip_mat_create(row_end - row_start,
         col_end - col_start, t->k, 0);
     
+    unsigned int col_current;
     unsigned int i, j, k;
-    for(i=0; row_start != row_end; i++, row_start++)
-        for(j=0; col_start != col_end; j++, col_start++)
+    for(i=0; row_start < row_end; i++, row_start++)
+        for(j=0, col_current = col_start; 
+            col_current < col_end; j++, col_current++) 
             for(k=0; k < out->k; k++)
                 set_val(out, i,j,k, 
-                    get_val(t, row_start, col_start, k));
+                    get_val(t, row_start, col_current, k));
 
     return out;
 }
@@ -310,10 +311,11 @@ ip_mat * ip_mat_to_gray_scale(ip_mat * in) {
     float mean, sum;
     unsigned int i, j, k;
     for(i=0; i<out->h; i++)
-        for(j=0, sum=0; j<out->w; j++) {
+        for(j=0; j<out->w; j++) {
+            sum = 0;
             for(k=0; k < out->k; k++)
                 sum += get_val(in, i,j,k);
-            mean = sum / ((float) (out->k));
+            mean = sum / (out->k);
             for(k=0; k < out->k; k++)
                 set_val(out, i,j,k, mean);
         }
@@ -329,7 +331,8 @@ ip_mat * ip_mat_blend(ip_mat * a, ip_mat * b, float alpha) {
     for(i=0; i<out->h; i++)
         for(j=0; j<out->w; j++)
             for(k=0; k < out->k; k++) {
-                blend = alpha * get_val(a,i,j,k) + (1-alpha) * get_val(b,i,j,k);
+                blend = (alpha * get_val(a,i,j,k))
+                     + ((1.0-alpha) * get_val(b,i,j,k));
                 set_val(out,i,j,k, blend);
             }
 
@@ -341,7 +344,7 @@ ip_mat * ip_mat_brighten(ip_mat * a, float bright) {
 }
 
 ip_mat * ip_mat_corrupt(ip_mat * a, float amount) {
-    return ip_mat_mul_scalar(a, get_normal_random()*amount);
+    return ip_mat_add_scalar(a, get_normal_random()*amount);
 }
 
 ip_mat * ip_mat_padding(ip_mat * a, int pad_h, int pad_w) {
@@ -349,14 +352,13 @@ ip_mat * ip_mat_padding(ip_mat * a, int pad_h, int pad_w) {
         a->k, 0);
 
     unsigned int i, j, k;
-    for(i=0; i<out->h; i++)
-        for(j=0; j<out->w; j++)
-            if(i >= pad_h || j >= pad_w || i < (a->h + pad_h) ||
-                j < (a->w + pad_w))
+    for(i=0; i<out->h - pad_h; i++)
+        for(j=0; j<out->w - pad_w; j++)
+            if(i >= pad_h && j >= pad_w)
                 for(k=0; k < out->k; k++)
                     set_val(out, i,j,k, 
-                        get_val(a, i,j,k));
-
+                        get_val(a, i - pad_h,j - pad_w,k));
+    
     return out;
 }
 
@@ -370,43 +372,98 @@ ip_mat * ip_mat_convolve(ip_mat * a, ip_mat * f) {
 
     unsigned int i,j,fi,fj;
     float sum0, sum1, sum2;
-    for(i=0; i < a->h; i++)
-        for(j=0; j < a->w; j++) {
+    for(i=0; i < out->h; i++)
+        for(j=0; j < out->w; j++) {
             sum0 = sum1 = sum2 = 0;
+            //printf("%d,%d - ", i,j);
             for(fi=0; fi < f->h; fi++)
                 for(fj=0; fj < f->w; fj++) {
-                    sum0 = get_val(a, i+fi,j+fj,0) * 
+                    sum0 += get_val(a, i+fi,j+fj,0) * 
                         get_val(f, fi, fj, 0);
-                    sum1 = get_val(a, i+fi,j+fj,1) * 
+                    sum1 += get_val(a, i+fi,j+fj,1) * 
                         get_val(f, fi, fj, 1);
-                    sum2 = get_val(a, i+fi,j+fj,2) * 
+                    sum2 += get_val(a, i+fi,j+fj,2) * 
                         get_val(f, fi, fj, 2);
                 }
             set_val(out, i,j,0, sum0);
             set_val(out, i,j,1, sum1);
-            set_val(out, i,j,0, sum2);
+            set_val(out, i,j,2, sum2);
         }
 
+    printf("FINITO!\n");
     return out;
 }
 
+/* 0 -1 0 
+ * -1 5 -1
+ * 0 -1 0 */
 ip_mat * create_sharpen_filter() {
     ip_mat * out = ip_mat_create(3,3,3,0);
+    
+    unsigned int i,j,k;
+    for(i=0; i<out->h; i++)
+        for(j=0; j<out->w; j++)
+            for(k=0; k<out->k; k++)
+                if(i == 1 && j == 1)
+                    set_val(out, i,j,k, 5);
+                else if ((i == 1 || j == 1) && 
+                    (i == 0 || i == 2 || j == 0 || j == 2))
+                    set_val(out, i,j,k, -1);
+                
+    ip_mat_show(out);
     return out;
 }
 
+/* -1 -1 -1 
+ * -1 8 -1
+ * -1 -1 -1 */
 ip_mat * create_edge_filter() {
     ip_mat * out = ip_mat_create(3,3,3,0);
+    unsigned int i,j,k;
+    for(i=0; i<out->h; i++)
+        for(j=0; j<out->w; j++)
+            for(k=0; k<out->k; k++)
+                if(i == 1 && j == 1) 
+                    set_val(out, i,j,k, 8);
+                else set_val(out,i,j,k, (-1));
+    ip_mat_show(out);
     return out;
 }
 
+/* -2 -1 0 
+ * -1 1 1
+ * 0 1 2 */
 ip_mat * create_emboss_filter() {
     ip_mat * out = ip_mat_create(3,3,3,0);
+
+    unsigned int i,j,k;
+    for(i=0; i<out->h; i++)
+        for(j=0; j<out->w; j++)
+            for(k=0; k<out->k; k++) {
+                set_val(out, 0,0,k, -2);
+                set_val(out, 0,1,k, -1);
+                set_val(out, 1,0,k, -1);
+                set_val(out, 1,1,k, 1);
+                set_val(out, 1,2,k, 1);
+                set_val(out, 2,1,k, 1);
+                set_val(out, 2,2,k, 2);
+            }
+
+    ip_mat_show(out);
     return out;
 }
 
 ip_mat * create_average_filter(int w, int h, int k) {
     ip_mat * out = ip_mat_create(3,3,3,0);
+
+    unsigned int i,j,l;
+    for(i=0; i<out->h; i++)
+        for(j=0; j<out->w; j++)
+            for(l=0; l<out->k; l++)
+                set_val(out, i,j,l, 
+                    (1.0 / (float)((w * h))));
+    
+    ip_mat_show(out);
     return out;
 }
 

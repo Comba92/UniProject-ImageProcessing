@@ -114,22 +114,30 @@ int main (int argc, char * argv[]) {
         exit(1);
     }
 
+    printf("fuori dal switch...\n");
+
     if(concat_images) {
         if(strcmp(operation, "blend") == 0){
             c = bm_load(fn_in_2);
             img_b = bitmap_to_ip_mat(c);
+            printf("flag 1...");
             temp = ip_mat_concat(input_img, img_b, 1);
             ip_mat_free(img_b);
             img_b = ip_mat_concat(temp, img, 1);
             ip_mat_free(temp);
+            printf("flag 2...");
             temp = img_b;
             bm_free(c);
         }else{
+            printf("Flag...");
             temp = ip_mat_concat(input_img, img, 1); /* metti le due immagini vicine */
         }
+        printf("quasi fatto...");
         ip_mat_free(img);  /* libera la memoria da img */
         img = temp;
     }
+
+    printf("concat done...\n");
 
     ip_mat_free(input_img); /* libera la memoria dalla ip_mat contenente l'immagine di input */
 

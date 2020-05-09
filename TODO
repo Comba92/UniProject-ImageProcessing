@@ -1,12 +1,10 @@
-FIXXARE STATS!!
-
 Parte 1.1
-CREATE - SEMBRA OK
-FREE - SEMBRA OK
+CREATE - OK
+FREE - NO
 INIT RANDOM - SEMBRA OK
-COPY - SEMBRA OK
-CONCAT - NO, DA SEGFAULT!
-SUBSET - ???
+COPY - OK
+CONCAT - OK
+SUBSET - OK!!
 
 Parte 1.2
 SUM - ???
@@ -17,14 +15,18 @@ MEAN - ???
 COMPUTE_STATS - ???
 
 Parte 2
-GRAY - NO, Rende tutto bianco
-BLEND - Funziona solo se alpha = 0 o 1.
-BRIGHTEN - Sembra OK
+GRAY - OK (sum non veniva azzerato)
+BLEND - OK
+BRIGHTEN - OK
 CORRUPT - NON FUNZIONA COME DOVREBBE
 
 
 Parte 3
-CONVOLVE
-PADDING
-RESCALE
-CLAMP
+CONVOLVE - funziona ma lascia un bordo a sinistra e in alto
+PADDING - OK!!
+
+average_filter - sembra ok
+gaussian_filter - da fare
+
+RESCALE - Sembra OK
+CLAMP - OK!!
