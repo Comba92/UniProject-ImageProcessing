@@ -76,7 +76,7 @@ int main (int argc, char * argv[]) {
     }
     else if (strcmp(operation, "brighten") == 0) {
         img = ip_mat_brighten(input_img, k_size); /* aumenta la luminosità */
-        clamp(img,0,255); /* effettua il clamping dei valori in 0-255 */
+        //clamp(img,0,255); /* effettua il clamping dei valori in 0-255 */
     }
     else if (strcmp(operation, "blend") == 0) {
         Bitmap * c = bm_load(fn_in_2);
@@ -92,16 +92,16 @@ int main (int argc, char * argv[]) {
     else if (strcmp(operation, "sharp") == 0) {
         filter = create_sharpen_filter(); /* crea un filtro di sharpening */
         img = ip_mat_convolve(input_img, filter); /* applica la convoluzione */
-        clamp(img,0,255);  /* effettua il clamping dei valori in 0-255 */
+        //clamp(img,0,255);  /* effettua il clamping dei valori in 0-255 */
     }
     else if (strcmp(operation, "edge") == 0) {
         filter = create_edge_filter();
         img = ip_mat_convolve(input_img, filter);
-        clamp(img,0,255);
+        //clamp(img,0,255);
     } else if (strcmp(operation, "emboss") == 0) {
         filter = create_emboss_filter();
         img = ip_mat_convolve(input_img, filter);
-        clamp(img,0,255);
+        //clamp(img,0,255);
     } else if (strcmp(operation, "avg") == 0) {
         filter = create_average_filter(k_size, k_size, 3);
         img = ip_mat_convolve(input_img, filter);
@@ -114,30 +114,23 @@ int main (int argc, char * argv[]) {
         exit(1);
     }
 
-    printf("fuori dal switch...\n");
 
     if(concat_images) {
         if(strcmp(operation, "blend") == 0){
             c = bm_load(fn_in_2);
             img_b = bitmap_to_ip_mat(c);
-            printf("flag 1...");
             temp = ip_mat_concat(input_img, img_b, 1);
             ip_mat_free(img_b);
             img_b = ip_mat_concat(temp, img, 1);
             ip_mat_free(temp);
-            printf("flag 2...");
             temp = img_b;
             bm_free(c);
         }else{
-            printf("Flag...");
             temp = ip_mat_concat(input_img, img, 1); /* metti le due immagini vicine */
         }
-        printf("quasi fatto...");
         ip_mat_free(img);  /* libera la memoria da img */
         img = temp;
     }
-
-    printf("concat done...\n");
 
     ip_mat_free(input_img); /* libera la memoria dalla ip_mat contenente l'immagine di input */
 

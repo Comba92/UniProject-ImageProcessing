@@ -4,7 +4,7 @@
 #include "bmp.h"
 
 int main(int argc, char * argv[]) {
-    char * in1 = "flower.bmp";
+    char * in1 = "flower2.bmp";
     char * in2 = "caf.bmp";
     char * out = "out.bmp";
 
@@ -55,11 +55,11 @@ int main(int argc, char * argv[]) {
             break;
         case 6: 
             printf("Testing subset...\n");
-            result = ip_mat_subset(matimg, 10, 50, 2, 50);
+            result = ip_mat_subset(matimg, 2, 4, 2, 4);
             break;
         case 7:
             printf("Testing padding...\n");
-            result = ip_mat_padding(matimg, 10, 10);
+            result = ip_mat_padding(matimg, 50, 50);
             break;
         case 8:
             printf("Testing sharpen...\n");
@@ -82,9 +82,12 @@ int main(int argc, char * argv[]) {
             break;
         case 12:
             printf("Testing gaussian...\n");
-            printf("STILL WIP\n");
-            return 0;
+            result = ip_mat_convolve(matimg, create_gaussian_filter(6, 6, 3, 1));
             break;
+        case 13: 
+            printf("Testing free...\n");
+            ip_mat_free(matimg);
+            return 0;
     }
 
     bmpimg = ip_mat_to_bitmap(result);

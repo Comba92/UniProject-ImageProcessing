@@ -1,12 +1,13 @@
 Parte 1.1
 CREATE - OK
-FREE - NO
+FREE - OK (non controllavi il puntatore non fosse null)
 INIT RANDOM - SEMBRA OK
 COPY - OK
 CONCAT - OK
-SUBSET - OK!!
+SUBSET - OK!!!
 
 Parte 1.2
+Non testati ma sembrano OK
 SUM - ???
 SUB - ???
 MUL SCALAR - ???
@@ -18,14 +19,13 @@ Parte 2
 GRAY - OK (sum non veniva azzerato)
 BLEND - OK
 BRIGHTEN - OK
-CORRUPT - NON FUNZIONA COME DOVREBBE
+CORRUPT - SPERIMENTALE - per ora ok
 
 
 Parte 3
-CONVOLVE - funziona ma lascia un bordo a sinistra e in alto
+CONVOLVE - funziona ma lascia un bordo
 PADDING - OK!!
 
-average_filter - sembra ok
 gaussian_filter - da fare
 
 RESCALE - Sembra OK
