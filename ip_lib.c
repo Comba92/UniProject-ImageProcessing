@@ -353,7 +353,7 @@ ip_mat * ip_mat_padding(ip_mat * a, int pad_h, int pad_w) {
     for(i=0; i<a->h; i++)
         for(j=0; j<a->w; j++)
             for(k=0; k < a->k; k++)
-                set_val(out, i+pad_h-1,j+pad_w-1,k, 
+                set_val(out, i+pad_h,j+pad_w,k, 
                     get_val(a, i,j,k));
     return out;
 }
@@ -374,7 +374,7 @@ ip_mat * ip_mat_convolve(ip_mat * a, ip_mat * f) {
                 for(fi=0; fi < f->h; fi++) 
                     for(fj=0; fj < f->w; fj++)
                         sum += get_val(a, i+fi,j+fj,k) * 
-                            get_val(f, fi, fj, k);
+                            get_val(f, fi, fj, 0);
                 set_val(out, i,j,k, sum);
             }
     
@@ -439,7 +439,7 @@ ip_mat * create_emboss_filter() {
 }
 
 ip_mat * create_average_filter(int w, int h, int k) {
-    ip_mat * out = ip_mat_create(3,3,3,0);
+    ip_mat * out = ip_mat_create(h,w,k,0);
 
     unsigned int i,j,l;
     for(i=0; i<out->h; i++)
@@ -452,11 +452,30 @@ ip_mat * create_average_filter(int w, int h, int k) {
 }
 
 float gauss_noise(int x, int y, float sigma) {
-    return (1 / (2*PI* pow(sigma, 2))) * exp(-((pow(x, 2) + pow(y, 2)) / 2*pow(sigma, 2)));
+    return 1 / (2 * PI * pow(sigma, 2) * exp((pow(x, 2) + pow(y, 2)) / 2 * pow(sigma, 2)));
 }
 
-ip_mat * create_gaussian_filter(int w, int h, int k, float sigma) {
-    return NULL;
+ip_mat * create_gaussian_filter(int w, int h, int l, float sigma) {
+    ip_mat * out = ip_mat_create(h, w, l, 0);
+    
+    int cx = h/2, cy = w/2;
+    int dx, dy;
+    float sum = 0;
+
+    unsigned int i,j;
+    for(i=0; i<out->h; i++)
+        for(j=0; j<out->w; j++) {
+            dx = i - cx, dy = j - cy;
+            set_val(out, i,j,0, gauss_noise(dx, dy, sigma));
+        }
+    
+    for(i=0; i<out->h; i++)
+        for(j=0; j<out->w; j++)
+            sum += get_val(out, i,j,0);
+
+    out = ip_mat_mul_scalar(out, (1/sum));
+    ip_mat_show(out);
+    return out;
 }
 
 void rescale(ip_mat * t, float new_max) {

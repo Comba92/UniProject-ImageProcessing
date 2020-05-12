@@ -26,7 +26,7 @@ Parte 3
 CONVOLVE - funziona ma lascia un bordo
 PADDING - OK!!
 
-gaussian_filter - da fare
+gaussian_filter - funziona al contrario
 
 RESCALE - Sembra OK
 CLAMP - OK!!
