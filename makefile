@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -lm
 
-main_iplib : main_iplib.c bmp.o ip_lib.o
+main : main_iplib.c bmp.o ip_lib.o
 	$(CC) $^ -o $@ $(CFLAGS)
 
 tests : bmp.o ip_lib.o tests.c
@@ -14,4 +14,4 @@ lib: bmp.c ip_lib.c
 	$(CC) $^ -c $(CFLAGS)
 
 clean: 
-	rm bmp.o ip_lib.o mandelbrot tests
+	rm bmp.o ip_lib.o mandelbrot tests main_iplib main

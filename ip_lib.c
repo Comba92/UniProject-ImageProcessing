@@ -345,7 +345,6 @@ ip_mat * ip_mat_corrupt(ip_mat * a, float amount) {
     return ip_mat_sum(a, (ip_mat_mul_scalar(out, amount)));
 }
 
-
 ip_mat * ip_mat_padding(ip_mat * a, int pad_h, int pad_w) {
     ip_mat * out = ip_mat_create(a->h + (pad_h * 2), a->w + (pad_w * 2), 3, 0);
 
@@ -452,7 +451,7 @@ ip_mat * create_average_filter(int w, int h, int k) {
 }
 
 float gauss_noise(int x, int y, float sigma) {
-    return 1 / (2 * PI * pow(sigma, 2) * exp((pow(x, 2) + pow(y, 2)) / 2 * pow(sigma, 2)));
+    return 1 / (2 * PI * sigma * exp((pow(x, 2) + pow(y, 2)) / (2 * sigma)));
 }
 
 ip_mat * create_gaussian_filter(int w, int h, int l, float sigma) {
@@ -467,14 +466,11 @@ ip_mat * create_gaussian_filter(int w, int h, int l, float sigma) {
         for(j=0; j<out->w; j++) {
             dx = i - cx, dy = j - cy;
             set_val(out, i,j,0, gauss_noise(dx, dy, sigma));
-        }
-    
-    for(i=0; i<out->h; i++)
-        for(j=0; j<out->w; j++)
             sum += get_val(out, i,j,0);
+        }
+            
 
     out = ip_mat_mul_scalar(out, (1/sum));
-    ip_mat_show(out);
     return out;
 }
 
