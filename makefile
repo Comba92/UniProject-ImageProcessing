@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-Wall -lm
+CFLAGS=-Wall --ansi --pedantic -lm -g3 -O3 -fsanitize=address -fsanitize=undefined -std=gnu89 -Wextra
+
 
 main : main_iplib.c bmp.o ip_lib.o
 	$(CC) $^ -o $@ $(CFLAGS)

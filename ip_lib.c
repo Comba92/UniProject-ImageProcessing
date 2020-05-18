@@ -104,6 +104,7 @@ float get_normal_random(){
 }
 
 ip_mat * ip_mat_create(unsigned int h, unsigned int w, unsigned int k, float v) {
+    unsigned int i,j,l;
     ip_mat * out = (ip_mat *) malloc(sizeof(ip_mat));
     out->h = h;
     out->w = w;
@@ -111,7 +112,6 @@ ip_mat * ip_mat_create(unsigned int h, unsigned int w, unsigned int k, float v) 
 
     out->stat = (stats *) malloc(sizeof(stats) * k);
 
-    unsigned int i,j,l;
     out->data = (float ***) malloc(sizeof(float **) * h);
     for(i=0; i<h; i++) {
         out->data[i] = (float **) malloc(sizeof(float *) * w);
@@ -173,9 +173,9 @@ void ip_mat_init_random(ip_mat * t, float mean, float var) {
 ip_mat * ip_mat_copy(ip_mat * in) {
     ip_mat * out = ip_mat_create(in->h, in->w, in->k, 0);
     unsigned int i,j,k;
-    for(i=0; i<in->h; i++)
-        for(j=0; j<in->w; j++)
-            for(k=0; k < in->k; k++)
+    for(i=0; i<out->h; i++)
+        for(j=0; j<out->w; j++)
+            for(k=0; k < out->k; k++)
             	set_val(out, i,j,k, 
             		get_val(in, i,j,k));
 
@@ -199,7 +199,7 @@ ip_mat * ip_mat_subset(ip_mat * t, unsigned int row_start, unsigned int row_end,
 }
 
 ip_mat * ip_mat_concat(ip_mat * a, ip_mat *b, int dimensione) {
-    ip_mat * out;
+    ip_mat * out = NULL;
     unsigned int i, j, k;
     switch(dimensione) {
         case 0:
@@ -322,9 +322,9 @@ ip_mat * ip_mat_blend(ip_mat * a, ip_mat * b, float alpha) {
 
     float blend;
     unsigned int i, j, k;
-    for(i=0; i<out->h; i++)
-        for(j=0; j<out->w; j++)
-            for(k=0; k < out->k; k++) {
+    for(i=0; i<a->h; i++)
+        for(j=0; j<a->w; j++)
+            for(k=0; k < a->k; k++) {
                 blend = (alpha * get_val(a,i,j,k))
                      + ((1.0-alpha) * get_val(b,i,j,k));
                 set_val(out,i,j,k, blend);
@@ -340,9 +340,15 @@ ip_mat * ip_mat_brighten(ip_mat * a, float bright) {
 }
 
 ip_mat * ip_mat_corrupt(ip_mat * a, float amount) {
-    ip_mat * out = ip_mat_copy(a);
-    ip_mat_init_random(out, 0, 0.5);
-    return ip_mat_sum(a, (ip_mat_mul_scalar(out, amount)));
+    ip_mat * out = NULL;
+    ip_mat * temp1 = ip_mat_copy(a);
+    ip_mat * temp2;
+    ip_mat_init_random(temp1, 0, 0.5);
+    temp2 = ip_mat_mul_scalar(temp1, amount);
+    out = ip_mat_sum(temp1, temp2);
+    ip_mat_free(temp1);
+    ip_mat_free(temp2);
+    return out;
 }
 
 ip_mat * ip_mat_padding(ip_mat * a, int pad_h, int pad_w) {
@@ -358,13 +364,12 @@ ip_mat * ip_mat_padding(ip_mat * a, int pad_h, int pad_w) {
 }
 
 ip_mat * ip_mat_convolve(ip_mat * a, ip_mat * f) {
+    unsigned int i,j,k,fi,fj;
+    float sum;
     unsigned int pad_h = (f->h - 1)/2;
     unsigned int pad_w = (f->w - 1)/2;
     ip_mat * out = ip_mat_create(a->h, a->w, a->k, 0); 
-    a = ip_mat_padding(a, pad_h, pad_w);
-
-    unsigned int i,j,k,fi,fj;
-    float sum;
+    ip_mat * padded = ip_mat_padding(a, pad_h, pad_w);
 
     for(k=0; k < out->k; k++)
         for(i=0; i < out->h; i++)
@@ -372,11 +377,12 @@ ip_mat * ip_mat_convolve(ip_mat * a, ip_mat * f) {
                 sum = 0;
                 for(fi=0; fi < f->h; fi++) 
                     for(fj=0; fj < f->w; fj++)
-                        sum += get_val(a, i+fi,j+fj,k) * 
+                        sum += get_val(padded, i+fi,j+fj,k) * 
                             get_val(f, fi, fj, 0);
                 set_val(out, i,j,k, sum);
             }
     
+    ip_mat_free(padded);
     clamp(out, 0, 255);
     return out;
 }
@@ -445,8 +451,9 @@ ip_mat * create_average_filter(int w, int h, int k) {
         for(j=0; j<out->w; j++)
             for(l=0; l<out->k; l++)
                 set_val(out, i,j,l, 
-                    (1.0 / (float)((w * h))));
-    
+                    (1.0 / ((w * h)))
+                );
+
     return out;
 }
 
@@ -455,22 +462,24 @@ float gauss_noise(int x, int y, float sigma) {
 }
 
 ip_mat * create_gaussian_filter(int w, int h, int l, float sigma) {
-    ip_mat * out = ip_mat_create(h, w, l, 0);
+    ip_mat * out = NULL;
+    ip_mat * temp = ip_mat_create(h, w, l, 0);
     
     int cx = h/2, cy = w/2;
     int dx, dy;
     float sum = 0;
 
     unsigned int i,j;
-    for(i=0; i<out->h; i++)
-        for(j=0; j<out->w; j++) {
+    for(i=0; i<temp->h; i++)
+        for(j=0; j<temp->w; j++) {
             dx = i - cx, dy = j - cy;
-            set_val(out, i,j,0, gauss_noise(dx, dy, sigma));
-            sum += get_val(out, i,j,0);
+            set_val(temp, i,j,0, gauss_noise(dx, dy, sigma));
+            sum += get_val(temp, i,j,0);
         }
             
 
-    out = ip_mat_mul_scalar(out, (1/sum));
+    out = ip_mat_mul_scalar(temp, (1/sum));
+    ip_mat_free(temp);
     return out;
 }
 
