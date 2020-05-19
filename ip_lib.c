@@ -96,11 +96,13 @@ void set_val(ip_mat * a, unsigned int i,unsigned int j,unsigned int k, float v){
     }
 }
 
-float get_normal_random(){
+float get_normal_random(float media, float std){
+
     float y1 = ( (float)(rand()) + 1. )/( (float)(RAND_MAX) + 1. );
     float y2 = ( (float)(rand()) + 1. )/( (float)(RAND_MAX) + 1. );
-    return cos(2*PI*y2)*sqrt(-2.*log(y1));
+    float num = cos(2*PI*y2)*sqrt(-2.*log(y1));
 
+    return media + num*std;
 }
 
 ip_mat * ip_mat_create(unsigned int h, unsigned int w, unsigned int k, float v) {
@@ -167,7 +169,7 @@ void ip_mat_init_random(ip_mat * t, float mean, float var) {
         for(j=0; j<t->w; j++)
             for(k=0; k < t->k; k++)
                 set_val(t, i,j,k, 
-                    get_normal_random() * var + mean);
+                    get_normal_random(mean, var));
 }
 
 ip_mat * ip_mat_copy(ip_mat * in) {
@@ -198,6 +200,7 @@ ip_mat * ip_mat_subset(ip_mat * t, unsigned int row_start, unsigned int row_end,
     return out;
 }
 
+
 ip_mat * ip_mat_concat(ip_mat * a, ip_mat *b, int dimensione) {
     ip_mat * out = NULL;
     unsigned int i, j, k;
@@ -213,24 +216,29 @@ ip_mat * ip_mat_concat(ip_mat * a, ip_mat *b, int dimensione) {
             break;
     }
 
-    for(i=0; i<a->h; i++)
-        for(j=0; j<a->w; j++)
-            for(k=0; k < a->k; k++) {
-                set_val(out, i,j,k, 
-                    get_val(a, i,j,k));
+    for(k=0; k<out->k; k++) {
+        for(i=0; i<a->h; i++)
+            for(j=0; j<a->w; j++)
+                set_val(out, i,j,k,
+                    get_val(a,i,j,k));
+        for(i=0; i<b->h; i++)
+            for(j=0; j<b->w; j++)
                 switch(dimensione) {
                     case 0:
-                        set_val(out, (a->h)+i, j, k,
-                            get_val(b, i,j,k)); break;
+                        set_val(out, a->h+i,j,k,
+                            get_val(b,i,j,k));
+                        break;
                     case 1:
-                        set_val(out, i, (a->w)+j, k,
-                            get_val(b, i,j,k)); break;
+                        set_val(out, i,a->w+j,k,
+                            get_val(b,i,j,k));
+                        break;
                     case 2:
-                        set_val(out, i, j, (a->k)+k,
-                            get_val(b, i,j,k)); break;
+                        set_val(out, i,j,a->k+k,
+                            get_val(b,i,j,k));
+                        break;
                 }
-            }
-          
+    }
+
     return out;
 }
 
@@ -345,13 +353,13 @@ ip_mat * ip_mat_corrupt(ip_mat * a, float amount) {
     ip_mat * temp2;
     ip_mat_init_random(temp1, 0, 0.5);
     temp2 = ip_mat_mul_scalar(temp1, amount);
-    out = ip_mat_sum(temp1, temp2);
+    out = ip_mat_sum(a, temp2);
     ip_mat_free(temp1);
     ip_mat_free(temp2);
     return out;
 }
 
-ip_mat * ip_mat_padding(ip_mat * a, int pad_h, int pad_w) {
+ip_mat * ip_mat_padding(ip_mat * a, unsigned int pad_h, unsigned int pad_w) {
     ip_mat * out = ip_mat_create(a->h + (pad_h * 2), a->w + (pad_w * 2), 3, 0);
 
     unsigned int i, j, k;
@@ -443,7 +451,7 @@ ip_mat * create_emboss_filter() {
     return out;
 }
 
-ip_mat * create_average_filter(int w, int h, int k) {
+ip_mat * create_average_filter(unsigned int w, unsigned int h, unsigned int k) {
     ip_mat * out = ip_mat_create(h,w,k,0);
 
     unsigned int i,j,l;
@@ -461,7 +469,7 @@ float gauss_noise(int x, int y, float sigma) {
     return 1 / (2 * PI * sigma * exp((pow(x, 2) + pow(y, 2)) / (2 * sigma)));
 }
 
-ip_mat * create_gaussian_filter(int w, int h, int l, float sigma) {
+ip_mat * create_gaussian_filter(unsigned int w, unsigned int h, unsigned int l, float sigma) {
     ip_mat * out = NULL;
     ip_mat * temp = ip_mat_create(h, w, l, 0);
     

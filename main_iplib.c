@@ -10,12 +10,12 @@ void show_help(){
     printf("\targ 3: operazione da effettuare (corrupt, gray, brighten, blend, sharp, edge, emboss, avg, gauss) \n");
     printf("\targ 4: output file name\n");
     printf("\targ 5: Se 1 concatena la/le immagini di input con quella di output\n");
-    printf("\targ 6: Diversi significati in funzione dell'operazione:\n"
-           "\t\t- [avg, gauss]: kernel size\n"
+    printf("\targ 6: Diversi significati in funzione dell'operazione (default 3):\n"
+           "\t\t- [avg, gauss]: kernel size \n"
            "\t\t- [corrupt]: massimo livello di noise se si vuole corrompere l'immagine\n"
            "\t\t- [brighten]: valore bright per aumentare la luminosità \n"
            "\t\t\n");
-    printf("\targ 7: Diversi significati in funzione dell'operazione:\n"
+    printf("\targ 7: Diversi significati in funzione dell'operazione (default 1.0):\n"
            "\t\t- [gauss] parametro sigma del kernel Gaussiano\n"
            "\t\t- [blend] parametro alpha per il blending di due immagini");
     printf("\n");
@@ -28,7 +28,7 @@ int main (int argc, char * argv[]) {
     char * operation; /* operazione da eseguire */
     char * fn_out; /* output file */
 
-    int concat_images; /* concatena o meno le immagini in output */
+    int concat_images = 0; /* concatena o meno le immagini in output */
 
     int k_size = 3; /* kernel size */
     float sigma = 1.; /* sigma del kernel gaussiano */
@@ -55,7 +55,9 @@ int main (int argc, char * argv[]) {
     operation = argv[3]; /* operazione da eseguire */
     fn_out = argv[4]; /* output file */
 
-    concat_images = atoi(argv[5]);
+    if(argc>5) {
+        concat_images = atoi(argv[5]);
+    }
 
     if(argc>6){
         k_size = atoi(argv[6]);
@@ -76,7 +78,7 @@ int main (int argc, char * argv[]) {
     }
     else if (strcmp(operation, "brighten") == 0) {
         img = ip_mat_brighten(input_img, k_size); /* aumenta la luminosità */
-        //clamp(img,0,255); /* effettua il clamping dei valori in 0-255 */
+        clamp(img,0,255); /* effettua il clamping dei valori in 0-255 */
     }
     else if (strcmp(operation, "blend") == 0) {
         Bitmap * c = bm_load(fn_in_2);
@@ -92,16 +94,16 @@ int main (int argc, char * argv[]) {
     else if (strcmp(operation, "sharp") == 0) {
         filter = create_sharpen_filter(); /* crea un filtro di sharpening */
         img = ip_mat_convolve(input_img, filter); /* applica la convoluzione */
-        //clamp(img,0,255);  /* effettua il clamping dei valori in 0-255 */
+        clamp(img,0,255);  /* effettua il clamping dei valori in 0-255 */
     }
     else if (strcmp(operation, "edge") == 0) {
         filter = create_edge_filter();
         img = ip_mat_convolve(input_img, filter);
-        //clamp(img,0,255);
+        clamp(img,0,255);
     } else if (strcmp(operation, "emboss") == 0) {
         filter = create_emboss_filter();
         img = ip_mat_convolve(input_img, filter);
-        //clamp(img,0,255);
+        clamp(img,0,255);
     } else if (strcmp(operation, "avg") == 0) {
         filter = create_average_filter(k_size, k_size, 3);
         img = ip_mat_convolve(input_img, filter);
@@ -113,7 +115,6 @@ int main (int argc, char * argv[]) {
         printf("The required operation doesn't exists\n");
         exit(1);
     }
-
 
     if(concat_images) {
         if(strcmp(operation, "blend") == 0){
@@ -144,3 +145,4 @@ int main (int argc, char * argv[]) {
 
     return 0; /* ciao a tutti!*/
 }
+
