@@ -8,6 +8,7 @@
 
 #define max(a,b) (a > b ? a : b);
 #define min(a,b) (a < b ? a : b);
+#define mat_iterate(m,i,j,ch) for(ch=0;ch<m->k;ch++) for(i=0;i<m->h;i++) for(j=0;j<m->w;j++)
 
 void ip_mat_show(ip_mat * t){
     unsigned int i,l,j;
@@ -188,14 +189,12 @@ ip_mat * ip_mat_subset(ip_mat * t, unsigned int row_start, unsigned int row_end,
     ip_mat * out = ip_mat_create(row_end - row_start + 1,
         col_end - col_start + 1, t->k, 0);
     
-    unsigned int col_current;
     unsigned int i, j, k;
-    for(i=0; row_start <= row_end; i++, row_start++)
-        for(j=0, col_current = col_start; 
-            col_current <= col_end; j++, col_current++) 
+    for(i=0; i + row_start <= row_end; i++)
+        for(j=0; j + col_start <= col_end; j++) 
             for(k=0; k < out->k; k++)
                 set_val(out, i,j,k, 
-                    get_val(t, row_start, col_current, k));
+                    get_val(t, i + row_start, j + col_start, k));
 
     return out;
 }
